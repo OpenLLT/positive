@@ -218,9 +218,6 @@
 //!
 //! This project is licensed under the MIT License.
 //!
-//! ## Author
-//!
-//! Joaquín Béjar García <jb@taunais.com>
 
 pub mod error;
 mod positive;
