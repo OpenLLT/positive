@@ -13,10 +13,6 @@
 
 ## Positive
 
-[![Crates.io](https://img.shields.io/crates/v/positive.svg)](https://crates.io/crates/positive)
-[![Documentation](https://docs.rs/positive/badge.svg)](https://docs.rs/positive)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
 A type-safe wrapper for guaranteed positive decimal values in Rust.
 
 ### Overview
