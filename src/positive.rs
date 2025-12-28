@@ -467,6 +467,29 @@ impl Positive {
         let remainder = self.0 % other.0;
         remainder.abs() < EPSILON
     }
+
+    /// Creates a new `Positive` value without checking if the value is non-negative.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that `value >= 0`. Using this with a negative value
+    /// will violate the invariant of the `Positive` type and may cause undefined
+    /// behavior in code that relies on the positivity guarantee.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use positive::Positive;
+    /// use rust_decimal_macros::dec;
+    ///
+    /// // SAFETY: We know 5.0 is positive
+    /// let value = unsafe { Positive::new_unchecked(dec!(5.0)) };
+    /// assert_eq!(value.to_f64(), 5.0);
+    /// ```
+    #[must_use]
+    pub const unsafe fn new_unchecked(value: Decimal) -> Self {
+        Positive(value)
+    }
 }
 
 impl From<Positive> for Decimal {
@@ -569,24 +592,48 @@ impl FromStr for Positive {
 }
 
 impl From<f64> for Positive {
+    /// Converts an f64 to a Positive value.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value is negative, NaN, or cannot be converted to Decimal.
+    /// For fallible conversion, use `Positive::new()` instead.
     fn from(value: f64) -> Self {
         Positive::new(value).expect("Value must be positive")
     }
 }
 
 impl From<usize> for Positive {
+    /// Converts a usize to a Positive value.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value cannot be converted to Decimal.
+    /// For fallible conversion, use `Positive::new()` instead.
     fn from(value: usize) -> Self {
         Positive::new(value as f64).expect("Value must be positive")
     }
 }
 
 impl From<Decimal> for Positive {
+    /// Converts a Decimal to a Positive value.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value is negative.
+    /// For fallible conversion, use `Positive::new_decimal()` instead.
     fn from(value: Decimal) -> Self {
         Positive::new_decimal(value).expect("Value must be positive")
     }
 }
 
 impl From<&Decimal> for Positive {
+    /// Converts a &Decimal to a Positive value.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value is negative.
+    /// For fallible conversion, use `Positive::new_decimal()` instead.
     fn from(value: &Decimal) -> Self {
         Positive::new_decimal(*value).expect("Value must be positive")
     }
