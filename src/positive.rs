@@ -6,6 +6,7 @@
 
 //! Core implementation of the Positive type.
 
+use crate::constants::EPSILON;
 use crate::error::PositiveError;
 use approx::{AbsDiffEq, RelativeEq};
 use num_traits::{FromPrimitive, Pow, ToPrimitive};
@@ -20,9 +21,6 @@ use std::iter::Sum;
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub};
 use std::str::FromStr;
 
-/// Default epsilon value for approximate comparisons.
-pub const EPSILON: Decimal = dec!(1e-16);
-
 /// A wrapper type that represents a guaranteed positive decimal value.
 ///
 /// This type encapsulates a `Decimal` value and ensures through its API that
@@ -31,78 +29,6 @@ pub const EPSILON: Decimal = dec!(1e-16);
 #[cfg_attr(feature = "utoipa", derive(utoipa::ToSchema))]
 pub struct Positive(pub Decimal);
 
-/// Macro for creating a `Positive` value from the given expression.
-///
-/// Returns `Ok(Positive)` if the value is valid and non-negative,
-/// otherwise returns `Err(PositiveError)`.
-///
-/// # Example
-///
-/// ```rust
-/// use positive::pos;
-///
-/// let valid = pos!(5.0);
-/// assert!(valid.is_ok());
-///
-/// let invalid = pos!(-5.0);
-/// assert!(invalid.is_err());
-/// ```
-#[macro_export]
-macro_rules! pos {
-    ($val:expr) => {
-        $crate::Positive::new($val)
-    };
-}
-
-/// Macro for creating a new `Positive` value that panics on invalid input.
-///
-/// Use this macro when you are certain the value is valid and want to
-/// avoid handling the `Result`. For safer alternatives, use `pos!()` which
-/// returns `Result<Positive, PositiveError>`.
-///
-/// # Panics
-///
-/// This macro will panic if the provided value cannot be converted to a `Positive` value
-/// (e.g., negative numbers or values that cannot be represented as `Decimal`).
-///
-/// # Example
-///
-/// ```rust
-/// use positive::pos_or_panic;
-///
-/// let value = pos_or_panic!(5.0);
-/// assert_eq!(value.to_f64(), 5.0);
-/// ```
-#[macro_export]
-macro_rules! pos_or_panic {
-    ($val:expr) => {
-        $crate::Positive::new($val).expect("Failed to create Positive value")
-    };
-}
-
-/// Macro for creating an optional `Positive` value from the given expression.
-///
-/// Returns `Some(Positive)` if the value is valid and non-negative,
-/// otherwise returns `None`. This is useful when you want to ignore errors.
-///
-/// # Example
-///
-/// ```rust
-/// use positive::spos;
-///
-/// let valid = spos!(5.0);
-/// assert!(valid.is_some());
-///
-/// let invalid = spos!(-5.0);
-/// assert!(invalid.is_none());
-/// ```
-#[macro_export]
-macro_rules! spos {
-    ($val:expr) => {
-        $crate::Positive::new($val).ok()
-    };
-}
-
 /// Determines if the given type parameter `T` is the `Positive` type.
 #[must_use]
 pub fn is_positive<T: 'static>() -> bool {
@@ -110,25 +36,107 @@ pub fn is_positive<T: 'static>() -> bool {
 }
 
 impl Positive {
+    // Re-export constants from the constants module for backward compatibility
     /// A zero value represented as a `Positive` value.
-    pub const ZERO: Positive = Positive(Decimal::ZERO);
+    pub const ZERO: Positive = crate::constants::ZERO;
     /// A value of one represented as a `Positive` value.
-    pub const ONE: Positive = Positive(Decimal::ONE);
+    pub const ONE: Positive = crate::constants::ONE;
     /// A value of two represented as a `Positive` value.
-    pub const TWO: Positive = Positive(Decimal::TWO);
-    /// Represents the maximum positive value possible (effectively infinity).
-    pub const INFINITY: Positive = Positive(Decimal::MAX);
+    pub const TWO: Positive = crate::constants::TWO;
+    /// A value of three represented as a `Positive` value.
+    pub const THREE: Positive = crate::constants::THREE;
+    /// A value of four represented as a `Positive` value.
+    pub const FOUR: Positive = crate::constants::FOUR;
+    /// A value of five represented as a `Positive` value.
+    pub const FIVE: Positive = crate::constants::FIVE;
+    /// A value of six represented as a `Positive` value.
+    pub const SIX: Positive = crate::constants::SIX;
+    /// A value of seven represented as a `Positive` value.
+    pub const SEVEN: Positive = crate::constants::SEVEN;
+    /// A value of eight represented as a `Positive` value.
+    pub const EIGHT: Positive = crate::constants::EIGHT;
+    /// A value of nine represented as a `Positive` value.
+    pub const NINE: Positive = crate::constants::NINE;
     /// A value of ten represented as a `Positive` value.
-    pub const TEN: Positive = Positive(Decimal::TEN);
+    pub const TEN: Positive = crate::constants::TEN;
+    /// A value of fifteen represented as a `Positive` value.
+    pub const FIFTEEN: Positive = crate::constants::FIFTEEN;
+    /// A value of twenty represented as a `Positive` value.
+    pub const TWENTY: Positive = crate::constants::TWENTY;
+    /// A value of twenty-five represented as a `Positive` value.
+    pub const TWENTY_FIVE: Positive = crate::constants::TWENTY_FIVE;
+    /// A value of thirty represented as a `Positive` value.
+    pub const THIRTY: Positive = crate::constants::THIRTY;
+    /// A value of thirty-five represented as a `Positive` value.
+    pub const THIRTY_FIVE: Positive = crate::constants::THIRTY_FIVE;
+    /// A value of forty represented as a `Positive` value.
+    pub const FORTY: Positive = crate::constants::FORTY;
+    /// A value of forty-five represented as a `Positive` value.
+    pub const FORTY_FIVE: Positive = crate::constants::FORTY_FIVE;
+    /// A value of fifty represented as a `Positive` value.
+    pub const FIFTY: Positive = crate::constants::FIFTY;
+    /// A value of fifty-five represented as a `Positive` value.
+    pub const FIFTY_FIVE: Positive = crate::constants::FIFTY_FIVE;
+    /// A value of sixty represented as a `Positive` value.
+    pub const SIXTY: Positive = crate::constants::SIXTY;
+    /// A value of sixty-five represented as a `Positive` value.
+    pub const SIXTY_FIVE: Positive = crate::constants::SIXTY_FIVE;
+    /// A value of seventy represented as a `Positive` value.
+    pub const SEVENTY: Positive = crate::constants::SEVENTY;
+    /// A value of seventy-five represented as a `Positive` value.
+    pub const SEVENTY_FIVE: Positive = crate::constants::SEVENTY_FIVE;
+    /// A value of eighty represented as a `Positive` value.
+    pub const EIGHTY: Positive = crate::constants::EIGHTY;
+    /// A value of eighty-five represented as a `Positive` value.
+    pub const EIGHTY_FIVE: Positive = crate::constants::EIGHTY_FIVE;
+    /// A value of ninety represented as a `Positive` value.
+    pub const NINETY: Positive = crate::constants::NINETY;
+    /// A value of ninety-five represented as a `Positive` value.
+    pub const NINETY_FIVE: Positive = crate::constants::NINETY_FIVE;
     /// A value of one hundred represented as a `Positive` value.
-    pub const HUNDRED: Positive = Positive(Decimal::ONE_HUNDRED);
+    pub const HUNDRED: Positive = crate::constants::HUNDRED;
+    /// A value of two hundred represented as a `Positive` value.
+    pub const TWO_HUNDRED: Positive = crate::constants::TWO_HUNDRED;
+    /// A value of three hundred represented as a `Positive` value.
+    pub const THREE_HUNDRED: Positive = crate::constants::THREE_HUNDRED;
+    /// A value of four hundred represented as a `Positive` value.
+    pub const FOUR_HUNDRED: Positive = crate::constants::FOUR_HUNDRED;
+    /// A value of five hundred represented as a `Positive` value.
+    pub const FIVE_HUNDRED: Positive = crate::constants::FIVE_HUNDRED;
+    /// A value of six hundred represented as a `Positive` value.
+    pub const SIX_HUNDRED: Positive = crate::constants::SIX_HUNDRED;
+    /// A value of seven hundred represented as a `Positive` value.
+    pub const SEVEN_HUNDRED: Positive = crate::constants::SEVEN_HUNDRED;
+    /// A value of eight hundred represented as a `Positive` value.
+    pub const EIGHT_HUNDRED: Positive = crate::constants::EIGHT_HUNDRED;
+    /// A value of nine hundred represented as a `Positive` value.
+    pub const NINE_HUNDRED: Positive = crate::constants::NINE_HUNDRED;
     /// A value of one thousand represented as a `Positive` value.
-    pub const THOUSAND: Positive = Positive(Decimal::ONE_THOUSAND);
+    pub const THOUSAND: Positive = crate::constants::THOUSAND;
+    /// A value of two thousand represented as a `Positive` value.
+    pub const TWO_THOUSAND: Positive = crate::constants::TWO_THOUSAND;
+    /// A value of three thousand represented as a `Positive` value.
+    pub const THREE_THOUSAND: Positive = crate::constants::THREE_THOUSAND;
+    /// A value of four thousand represented as a `Positive` value.
+    pub const FOUR_THOUSAND: Positive = crate::constants::FOUR_THOUSAND;
+    /// A value of five thousand represented as a `Positive` value.
+    pub const FIVE_THOUSAND: Positive = crate::constants::FIVE_THOUSAND;
+    /// A value of six thousand represented as a `Positive` value.
+    pub const SIX_THOUSAND: Positive = crate::constants::SIX_THOUSAND;
+    /// A value of seven thousand represented as a `Positive` value.
+    pub const SEVEN_THOUSAND: Positive = crate::constants::SEVEN_THOUSAND;
+    /// A value of eight thousand represented as a `Positive` value.
+    pub const EIGHT_THOUSAND: Positive = crate::constants::EIGHT_THOUSAND;
+    /// A value of nine thousand represented as a `Positive` value.
+    pub const NINE_THOUSAND: Positive = crate::constants::NINE_THOUSAND;
+    /// A value of ten thousand represented as a `Positive` value.
+    pub const TEN_THOUSAND: Positive = crate::constants::TEN_THOUSAND;
     /// The mathematical constant π (pi) represented as a `Positive` value.
-    pub const PI: Positive = Positive(Decimal::PI);
-
+    pub const PI: Positive = crate::constants::PI;
     /// The mathematical constant e (Euler's number) represented as a `Positive` value.
-    pub const E: Positive = Positive(Decimal::E);
+    pub const E: Positive = crate::constants::E;
+    /// Represents the maximum positive value possible (effectively infinity).
+    pub const INFINITY: Positive = crate::constants::INFINITY;
 
     /// Creates a new `Positive` value from a 64-bit floating-point number.
     pub fn new(value: f64) -> Result<Self, PositiveError> {

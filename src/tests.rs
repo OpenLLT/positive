@@ -84,7 +84,7 @@ macro_rules! assert_pos_relative_eq {
 
 #[cfg(test)]
 mod tests_assert_positivef64_relative_eq {
-    use crate::{Positive, pos_or_panic};
+    use crate::Positive;
 
     #[test]
     fn test_exact_equality() {
