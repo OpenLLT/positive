@@ -20,6 +20,9 @@
 //! - **Type Safety**: Compile-time and runtime guarantees that values are non-negative
 //! - **Decimal Precision**: Built on [`rust_decimal`](https://crates.io/crates/rust_decimal) for accurate financial calculations
 //! - **Rich API**: Comprehensive arithmetic operations, conversions, and mathematical utilities
+//! - **Predefined Constants**: Common numeric values (0-10, multiples of 5/100/1000, PI, E, etc.)
+//! - **Convenient Macros**: `pos!`, `pos_or_panic!`, `spos!` for easy value creation
+//! - **Prelude Module**: Simple imports with `use positive::prelude::*;`
 //! - **Serde Support**: Full serialization/deserialization support for JSON and other formats
 //! - **Approx Support**: Approximate equality comparisons for floating-point tolerance
 //! - **Checked Operations**: Safe arithmetic operations that return `Result` instead of panicking
@@ -31,20 +34,21 @@
 //!
 //! ```toml
 //! [dependencies]
-//! positive = "0.1"
+//! positive = "0.3"
 //! ```
 //!
 //! To enable OpenAPI schema support:
 //!
 //! ```toml
 //! [dependencies]
-//! positive = { version = "0.1", features = ["utoipa"] }
+//! positive = { version = "0.3", features = ["utoipa"] }
 //! ```
 //!
 //! ## Quick Start
 //!
 //! ```rust
-//! use positive::{Positive, pos, pos_or_panic};
+//! // Use the prelude for convenient imports
+//! use positive::prelude::*;
 //!
 //! // Create a positive value using the macro (returns Result)
 //! let price = pos!(100.50).unwrap();
@@ -54,6 +58,9 @@
 //!
 //! // Create using the constructor
 //! let quantity = Positive::new(10.0).unwrap();
+//!
+//! // Use predefined constants
+//! let tax_rate = FIVE / HUNDRED;  // 5%
 //!
 //! // Arithmetic operations
 //! let total = price * quantity;
@@ -89,16 +96,37 @@
 //!
 //! ### Constants
 //!
+//! The library provides many predefined constants accessible via `Positive::CONSTANT`
+//! or directly from the `constants` module:
+//!
 //! ```rust
 //! use positive::Positive;
+//! use positive::constants::*;
 //!
+//! // Integer constants (0-10)
 //! let zero = Positive::ZERO;       // 0
 //! let one = Positive::ONE;         // 1
 //! let two = Positive::TWO;         // 2
 //! let ten = Positive::TEN;         // 10
+//!
+//! // Multiples of 5 (15-95)
+//! let fifteen = FIFTEEN;           // 15
+//! let fifty = FIFTY;               // 50
+//!
+//! // Multiples of 100 (100-900)
 //! let hundred = Positive::HUNDRED; // 100
+//! let five_hundred = FIVE_HUNDRED; // 500
+//!
+//! // Multiples of 1000 (1000-10000)
 //! let thousand = Positive::THOUSAND; // 1000
-//! let pi = Positive::PI;           // π
+//! let ten_thousand = TEN_THOUSAND;   // 10000
+//!
+//! // Mathematical constants
+//! let pi = Positive::PI;           // π (3.14159...)
+//! let e = Positive::E;             // e (2.71828...)
+//!
+//! // Special values
+//! let epsilon = EPSILON;           // Small tolerance for comparisons
 //! let inf = Positive::INFINITY;    // Maximum value
 //! ```
 //!
