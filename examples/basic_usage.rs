@@ -50,8 +50,11 @@ fn main() {
     let result = a.checked_sub(&b);
     println!("a.checked_sub(&b) = {result:?}");
 
-    let saturating = b.saturating_sub(&a);
-    println!("b.saturating_sub(&a) = {saturating} (saturates to ZERO)");
+    #[cfg(not(feature = "non-zero"))]
+    {
+        let saturating = b.saturating_sub(&a);
+        println!("b.saturating_sub(&a) = {saturating} (saturates to ZERO)");
+    }
 
     // Mathematical functions
     println!("\n--- Mathematical Functions ---");
@@ -95,7 +98,7 @@ fn main() {
 
     // Clamping
     let value = pos_or_panic!(150.0);
-    let clamped = value.clamp(pos_or_panic!(0.0), pos_or_panic!(100.0));
+    let clamped = value.clamp(pos_or_panic!(1.0), pos_or_panic!(100.0));
     println!("clamp({value}, 0, 100) = {clamped}");
 
     println!("\n=== Example Complete ===");

@@ -17,6 +17,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::cmp::{Ordering, PartialEq};
 use std::fmt;
 use std::fmt::Display;
+#[cfg(not(feature = "non-zero"))]
 use std::iter::Sum;
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub};
 use std::str::FromStr;
@@ -25,9 +26,47 @@ use std::str::FromStr;
 ///
 /// This type encapsulates a `Decimal` value and ensures through its API that
 /// the contained value is always positive (greater than or equal to zero).
+///
+/// When the `non-zero` feature is enabled, the value must be strictly
+/// greater than zero.
 #[derive(PartialEq, Clone, Copy, Hash)]
 #[cfg_attr(feature = "utoipa", derive(utoipa::ToSchema))]
 pub struct Positive(pub Decimal);
+
+/// Returns whether the given decimal value satisfies the positivity constraint.
+///
+/// Without the `non-zero` feature, values >= 0 are accepted.
+/// With the `non-zero` feature, only values > 0 are accepted.
+#[inline]
+#[must_use]
+pub fn is_valid_positive_value(value: Decimal) -> bool {
+    #[cfg(feature = "non-zero")]
+    {
+        value > Decimal::ZERO
+    }
+    #[cfg(not(feature = "non-zero"))]
+    {
+        value >= Decimal::ZERO
+    }
+}
+
+/// Returns the minimum bound for error messages.
+///
+/// Without the `non-zero` feature, the minimum is 0.0.
+/// With the `non-zero` feature, the minimum is the smallest representable
+/// positive f64 value.
+#[inline]
+#[must_use]
+fn min_bound() -> f64 {
+    #[cfg(feature = "non-zero")]
+    {
+        f64::MIN_POSITIVE
+    }
+    #[cfg(not(feature = "non-zero"))]
+    {
+        0.0
+    }
+}
 
 /// Determines if the given type parameter `T` is the `Positive` type.
 #[must_use]
@@ -38,6 +77,9 @@ pub fn is_positive<T: 'static>() -> bool {
 impl Positive {
     // Re-export constants from the constants module for backward compatibility
     /// A zero value represented as a `Positive` value.
+    ///
+    /// This constant is not available when the `non-zero` feature is enabled.
+    #[cfg(not(feature = "non-zero"))]
     pub const ZERO: Positive = crate::constants::ZERO;
     /// A value of one represented as a `Positive` value.
     pub const ONE: Positive = crate::constants::ONE;
@@ -139,13 +181,16 @@ impl Positive {
     pub const INFINITY: Positive = crate::constants::INFINITY;
 
     /// Creates a new `Positive` value from a 64-bit floating-point number.
+    ///
+    /// Without the `non-zero` feature, values >= 0 are accepted.
+    /// With the `non-zero` feature, only values > 0 are accepted.
     pub fn new(value: f64) -> Result<Self, PositiveError> {
         let dec = Decimal::from_f64(value);
         match dec {
-            Some(value) if value >= Decimal::ZERO => Ok(Positive(value)),
+            Some(value) if is_valid_positive_value(value) => Ok(Positive(value)),
             Some(value) => Err(PositiveError::OutOfBounds {
                 value: value.to_f64().unwrap_or(0.0),
-                min: 0.0,
+                min: min_bound(),
                 max: f64::MAX,
             }),
             None => Err(PositiveError::ConversionError {
@@ -157,13 +202,16 @@ impl Positive {
     }
 
     /// Creates a new `Positive` value directly from a `Decimal`.
+    ///
+    /// Without the `non-zero` feature, values >= 0 are accepted.
+    /// With the `non-zero` feature, only values > 0 are accepted.
     pub fn new_decimal(value: Decimal) -> Result<Self, PositiveError> {
-        if value >= Decimal::ZERO {
+        if is_valid_positive_value(value) {
             Ok(Positive(value))
         } else {
             Err(PositiveError::OutOfBounds {
                 value: value.to_f64().unwrap_or(0.0),
-                min: 0.0,
+                min: min_bound(),
                 max: f64::INFINITY,
             })
         }
@@ -409,6 +457,10 @@ impl Positive {
     }
 
     /// Subtracts a decimal value, returning zero if the result would be negative.
+    ///
+    /// This method is not available when the `non-zero` feature is enabled
+    /// because the result could be zero.
+    #[cfg(not(feature = "non-zero"))]
     #[must_use]
     pub fn sub_or_zero(&self, other: &Decimal) -> Positive {
         if &self.0 > other {
@@ -434,6 +486,10 @@ impl Positive {
     }
 
     /// Saturating subtraction that returns ZERO instead of negative.
+    ///
+    /// This method is not available when the `non-zero` feature is enabled
+    /// because the result could be zero.
+    #[cfg(not(feature = "non-zero"))]
     #[must_use]
     pub fn saturating_sub(&self, rhs: &Self) -> Self {
         if self.0 > rhs.0 {
@@ -592,7 +648,7 @@ impl FromStr for Positive {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.parse::<Decimal>() {
-            Ok(value) if value >= Decimal::ZERO => Ok(Positive(value)),
+            Ok(value) if is_valid_positive_value(value) => Ok(Positive(value)),
             Ok(value) => Err(format!("Value must be positive, got {value}")),
             Err(e) => Err(format!("Failed to parse as Decimal: {e}")),
         }
@@ -833,10 +889,11 @@ impl<'de> Deserialize<'de> for Positive {
             where
                 E: serde::de::Error,
             {
-                if value < 0 {
-                    Err(serde::de::Error::custom("Expected a non-negative integer"))
+                let decimal = Decimal::from(value);
+                if !is_valid_positive_value(decimal) {
+                    Err(serde::de::Error::custom("Expected a positive integer"))
                 } else {
-                    Positive::new_decimal(Decimal::from(value)).map_err(serde::de::Error::custom)
+                    Positive::new_decimal(decimal).map_err(serde::de::Error::custom)
                 }
             }
 
@@ -844,7 +901,12 @@ impl<'de> Deserialize<'de> for Positive {
             where
                 E: serde::de::Error,
             {
-                Positive::new_decimal(Decimal::from(value)).map_err(serde::de::Error::custom)
+                let decimal = Decimal::from(value);
+                if !is_valid_positive_value(decimal) {
+                    Err(serde::de::Error::custom("Expected a positive integer"))
+                } else {
+                    Positive::new_decimal(decimal).map_err(serde::de::Error::custom)
+                }
             }
 
             fn visit_f64<E>(self, value: f64) -> Result<Self::Value, E>
@@ -859,8 +921,8 @@ impl<'de> Deserialize<'de> for Positive {
                 }
                 let decimal = Decimal::from_f64(value)
                     .ok_or_else(|| serde::de::Error::custom("Failed to convert f64 to Decimal"))?;
-                if value < 0.0 {
-                    Err(serde::de::Error::custom("Expected a non-negative float"))
+                if !is_valid_positive_value(decimal) {
+                    Err(serde::de::Error::custom("Expected a positive float"))
                 } else {
                     Positive::new_decimal(decimal).map_err(serde::de::Error::custom)
                 }
@@ -1091,9 +1153,17 @@ impl From<&Positive> for Decimal {
     }
 }
 
+#[cfg(not(feature = "non-zero"))]
 impl Default for Positive {
     fn default() -> Self {
         Positive::ZERO
+    }
+}
+
+#[cfg(feature = "non-zero")]
+impl Default for Positive {
+    fn default() -> Self {
+        Positive::ONE
     }
 }
 
@@ -1126,6 +1196,7 @@ impl RelativeEq for Positive {
     }
 }
 
+#[cfg(not(feature = "non-zero"))]
 impl Sum for Positive {
     fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
         let sum = iter.fold(Decimal::ZERO, |acc, x| acc + x.value());
@@ -1133,6 +1204,7 @@ impl Sum for Positive {
     }
 }
 
+#[cfg(not(feature = "non-zero"))]
 impl<'a> Sum<&'a Positive> for Positive {
     fn sum<I: Iterator<Item = &'a Positive>>(iter: I) -> Self {
         let sum = iter.fold(Decimal::ZERO, |acc, x| acc + x.value());

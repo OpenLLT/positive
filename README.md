@@ -41,14 +41,14 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-positive = "0.3"
+positive = "0.4"
 ```
 
 To enable OpenAPI schema support:
 
 ```toml
 [dependencies]
-positive = { version = "0.3", features = ["utoipa"] }
+positive = { version = "0.4", features = ["utoipa"] }
 ```
 
 ### Quick Start
@@ -75,10 +75,6 @@ let total = price * quantity;
 // Safe operations that return Result
 let discount = pos_or_panic!(5.0);
 let final_price = price.checked_sub(&discount).unwrap();
-
-// Saturating subtraction (returns ZERO instead of negative)
-let result = pos_or_panic!(3.0).saturating_sub(&pos_or_panic!(5.0));
-assert_eq!(result, Positive::ZERO);
 ```
 
 ### API Overview
@@ -110,8 +106,7 @@ or directly from the `constants` module:
 use positive::Positive;
 use positive::constants::*;
 
-// Integer constants (0-10)
-let zero = Positive::ZERO;       // 0
+// Integer constants (1-10)
 let one = Positive::ONE;         // 1
 let two = Positive::TWO;         // 2
 let ten = Positive::TEN;         // 10
@@ -168,7 +163,6 @@ let quot = a / b;       // Division
 
 // Safe operations
 let safe_diff = a.checked_sub(&b);    // Returns Result
-let sat_diff = a.saturating_sub(&b);  // Returns ZERO if result < 0
 let safe_quot = a.checked_div(&b);    // Returns Result (handles div by zero)
 ```
 

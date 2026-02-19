@@ -135,7 +135,7 @@ bench-show:
 
 .PHONY: bench-save
 bench-save: check-cargo-criterion
-	cargo criterion --output-format quiet --history-id v0.3.2 --history-description "Version 0.3.2 baseline"
+	cargo criterion --output-format quiet --history-id v0.4.0 --history-description "Version 0.4.0 baseline"
 
 .PHONY: bench-compare
 bench-compare: check-cargo-criterion

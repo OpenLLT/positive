@@ -14,11 +14,6 @@
 /// let b = pos_or_panic!(1.0001);
 /// let epsilon = pos_or_panic!(0.001);
 /// assert_pos_relative_eq!(a, b, epsilon); // Passes
-///
-/// let e = pos_or_panic!(0.0);
-/// let f = pos_or_panic!(0.0001);
-/// let epsilon = pos_or_panic!(0.001);
-/// assert_pos_relative_eq!(e, f, epsilon); // Passes
 /// ```
 ///
 /// ```should_panic
@@ -28,15 +23,6 @@
 /// let d = pos_or_panic!(2.0);
 /// let epsilon = pos_or_panic!(0.001);
 /// assert_pos_relative_eq!(c, d, epsilon); // Panics
-/// ```
-///
-/// ```should_panic
-/// use positive::{assert_pos_relative_eq, pos_or_panic};
-///
-/// let g = pos_or_panic!(0.0);
-/// let h = pos_or_panic!(0.0011);
-/// let epsilon = pos_or_panic!(0.001);
-/// assert_pos_relative_eq!(g, h, epsilon); // Panics
 /// ```
 ///
 /// # Panics
@@ -51,43 +37,51 @@ macro_rules! assert_pos_relative_eq {
         let left: $crate::Positive = $left;
         let right: $crate::Positive = $right;
         let epsilon: $crate::Positive = $epsilon;
-        let abs_diff: $crate::Positive =
-            $crate::Positive::new((left.to_f64() - right.to_f64()).abs())
-                .expect("abs_diff must be positive");
-        let max_abs = left.max(right);
+        let diff_f64 = (left.to_f64() - right.to_f64()).abs();
 
-        if left == $crate::Positive::ZERO || right == $crate::Positive::ZERO {
-            let non_zero_value = if left == $crate::Positive::ZERO {
-                right
-            } else {
-                left
-            };
-            assert!(
-                non_zero_value <= epsilon,
-                "assertion failed: `(left == right)` \
-                 (left: `{}`, right: `{}`, expected max value: `{}`, actual value: `{}`)",
-                left,
-                right,
-                epsilon,
-                non_zero_value
-            );
+        // If the difference is exactly zero, the values are equal — always passes.
+        if diff_f64 == 0.0 {
+            // exact match, nothing to check
         } else {
-            let relative_diff = abs_diff / max_abs;
-            assert!(
-                relative_diff <= epsilon,
-                "assertion failed: `(left ≈ right)` \
-                 (left: `{}`, right: `{}`, expected relative diff: `{}`, real relative diff: `{}`)",
-                left,
-                right,
-                epsilon,
-                relative_diff
-            );
+            let abs_diff: $crate::Positive =
+                $crate::Positive::new(diff_f64)
+                    .expect("abs_diff must be positive");
+            let max_abs = left.max(right);
+
+            if left.is_zero() || right.is_zero() {
+                let non_zero_value = if left.is_zero() {
+                    right
+                } else {
+                    left
+                };
+                assert!(
+                    non_zero_value <= epsilon,
+                    "assertion failed: `(left == right)` \
+                     (left: `{}`, right: `{}`, expected max value: `{}`, actual value: `{}`)",
+                    left,
+                    right,
+                    epsilon,
+                    non_zero_value
+                );
+            } else {
+                let relative_diff = abs_diff / max_abs;
+                assert!(
+                    relative_diff <= epsilon,
+                    "assertion failed: `(left ≈ right)` \
+                     (left: `{}`, right: `{}`, expected relative diff: `{}`, real relative diff: `{}`)",
+                    left,
+                    right,
+                    epsilon,
+                    relative_diff
+                );
+            }
         }
     }};
 }
 
 #[cfg(test)]
 mod tests_assert_positivef64_relative_eq {
+    #[cfg(not(feature = "non-zero"))]
     use crate::Positive;
 
     #[test]
@@ -106,6 +100,7 @@ mod tests_assert_positivef64_relative_eq {
         assert_pos_relative_eq!(a, b, epsilon);
     }
 
+    #[cfg(not(feature = "non-zero"))]
     #[test]
     fn test_zero_values() {
         let a = Positive::ZERO;
@@ -114,6 +109,7 @@ mod tests_assert_positivef64_relative_eq {
         assert_pos_relative_eq!(a, b, epsilon);
     }
 
+    #[cfg(not(feature = "non-zero"))]
     #[test]
     fn test_zero_and_small_value() {
         let a = Positive::ZERO;
@@ -164,6 +160,7 @@ mod tests_assert_positivef64_relative_eq {
         assert_pos_relative_eq!(a, b, epsilon);
     }
 
+    #[cfg(not(feature = "non-zero"))]
     #[test]
     #[should_panic(expected = "assertion failed")]
     fn test_zero_and_large_value() {

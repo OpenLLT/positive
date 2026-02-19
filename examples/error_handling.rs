@@ -68,6 +68,7 @@ fn main() {
         Err(e) => println!("Division error: {e}"),
     }
 
+    #[cfg(not(feature = "non-zero"))]
     match a.checked_div(&ZERO) {
         Ok(result) => println!("{a} / 0 = {result}"),
         Err(e) => println!("Division by zero error: {e}"),
@@ -76,11 +77,13 @@ fn main() {
     // Saturating operations (never fail)
     println!("\n--- Saturating Operations ---");
 
-    let small = pos_or_panic!(5.0);
-    let large = pos_or_panic!(100.0);
-
-    let result = small.saturating_sub(&large);
-    println!("{small}.saturating_sub({large}) = {result} (saturates to ZERO)");
+    #[cfg(not(feature = "non-zero"))]
+    {
+        let small = pos_or_panic!(5.0);
+        let large = pos_or_panic!(100.0);
+        let result = small.saturating_sub(&large);
+        println!("{small}.saturating_sub({large}) = {result} (saturates to ZERO)");
+    }
 
     // Using Result combinators
     println!("\n--- Using Result Combinators ---");
