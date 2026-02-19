@@ -18,6 +18,9 @@ use rust_decimal_macros::dec;
 // =============================================================================
 
 /// A zero value represented as a `Positive` value.
+///
+/// This constant is not available when the `non-zero` feature is enabled.
+#[cfg(not(feature = "non-zero"))]
 pub const ZERO: Positive = Positive(Decimal::ZERO);
 
 /// A value of one represented as a `Positive` value.

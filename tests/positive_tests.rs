@@ -11,9 +11,18 @@ use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use std::str::FromStr;
 
+#[cfg(not(feature = "non-zero"))]
 #[test]
 fn test_positive_decimal_creation() {
     assert!(Positive::new_decimal(Decimal::ZERO).is_ok());
+    assert!(Positive::new_decimal(Decimal::ONE).is_ok());
+    assert!(Positive::new_decimal(Decimal::NEGATIVE_ONE).is_err());
+}
+
+#[cfg(feature = "non-zero")]
+#[test]
+fn test_positive_decimal_creation_non_zero() {
+    assert!(Positive::new_decimal(Decimal::ZERO).is_err());
     assert!(Positive::new_decimal(Decimal::ONE).is_ok());
     assert!(Positive::new_decimal(Decimal::NEGATIVE_ONE).is_err());
 }
@@ -98,9 +107,16 @@ fn test_positive_decimal_mul_f64() {
     assert_eq!((a * 3.0), 6.0);
 }
 
+#[cfg(not(feature = "non-zero"))]
 #[test]
 fn test_positive_decimal_default() {
     assert_eq!(Positive::default().value(), Decimal::ZERO);
+}
+
+#[cfg(feature = "non-zero")]
+#[test]
+fn test_positive_decimal_default_non_zero() {
+    assert_eq!(Positive::default().value(), Decimal::ONE);
 }
 
 #[test]
@@ -110,9 +126,16 @@ fn test_decimal_div_positive_decimal() {
     assert_eq!(a / b, dec!(3.0));
 }
 
+#[cfg(not(feature = "non-zero"))]
 #[test]
 fn test_constants() {
     assert_eq!(Positive::ZERO.value(), Decimal::ZERO);
+    assert_eq!(Positive::ONE.value(), Decimal::ONE);
+}
+
+#[cfg(feature = "non-zero")]
+#[test]
+fn test_constants_non_zero() {
     assert_eq!(Positive::ONE.value(), Decimal::ONE);
 }
 
@@ -164,6 +187,7 @@ fn test_positive_decimal_neg() {
     let _ = -a;
 }
 
+#[cfg(not(feature = "non-zero"))]
 #[test]
 fn test_sum_owned_values() {
     let values = vec![pos_or_panic!(1.0), pos_or_panic!(2.0), pos_or_panic!(3.0)];
@@ -171,6 +195,7 @@ fn test_sum_owned_values() {
     assert_eq!(sum.to_f64(), 6.0);
 }
 
+#[cfg(not(feature = "non-zero"))]
 #[test]
 fn test_sum_referenced_values() {
     let values = [pos_or_panic!(1.0), pos_or_panic!(2.0), pos_or_panic!(3.0)];
@@ -178,6 +203,7 @@ fn test_sum_referenced_values() {
     assert_eq!(sum.to_f64(), 6.0);
 }
 
+#[cfg(not(feature = "non-zero"))]
 #[test]
 fn test_sum_empty_iterator() {
     let values: Vec<Positive> = vec![];
@@ -202,6 +228,7 @@ fn test_checked_sub_failure() {
     assert!(result.is_err());
 }
 
+#[cfg(not(feature = "non-zero"))]
 #[test]
 fn test_saturating_sub() {
     let a = pos_or_panic!(5.0);
@@ -222,6 +249,7 @@ fn test_checked_div_success() {
     assert_eq!(result.unwrap().to_f64(), 3.0);
 }
 
+#[cfg(not(feature = "non-zero"))]
 #[test]
 fn test_checked_div_by_zero() {
     let a = pos_or_panic!(6.0);
@@ -237,9 +265,18 @@ fn test_pos_positive_values() {
     assert_eq!(pos_or_panic!(0.1).value(), Decimal::new(1, 1));
 }
 
+#[cfg(not(feature = "non-zero"))]
 #[test]
 fn test_pos_zero() {
     assert_eq!(Positive::ZERO, Positive::ZERO);
+}
+
+#[cfg(feature = "non-zero")]
+#[test]
+fn test_zero_is_rejected() {
+    assert!(Positive::new(0.0).is_err());
+    assert!(pos!(0.0).is_err());
+    assert!(spos!(0.0).is_none());
 }
 
 #[test]
@@ -336,12 +373,25 @@ fn test_positive_roundtrip() {
     assert_eq!(original, deserialized);
 }
 
+#[cfg(not(feature = "non-zero"))]
 #[test]
 fn test_positive_zero_deserialization() {
     let json = "0";
     let result = serde_json::from_str::<Positive>(json);
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), Positive::ZERO);
+}
+
+#[cfg(feature = "non-zero")]
+#[test]
+fn test_positive_zero_deserialization_non_zero() {
+    let json = "0";
+    let result = serde_json::from_str::<Positive>(json);
+    assert!(result.is_err());
+
+    let json_float = "0.0";
+    let result = serde_json::from_str::<Positive>(json_float);
+    assert!(result.is_err());
 }
 
 #[test]
@@ -441,12 +491,20 @@ fn test_round_to() {
     assert_eq!(value.round_to(2).to_f64(), 1.23);
 }
 
+#[cfg(not(feature = "non-zero"))]
 #[test]
 fn test_is_zero() {
     assert!(Positive::ZERO.is_zero());
     assert!(!pos_or_panic!(1.0).is_zero());
 }
 
+#[cfg(feature = "non-zero")]
+#[test]
+fn test_is_zero_non_zero() {
+    assert!(!pos_or_panic!(1.0).is_zero());
+}
+
+#[cfg(not(feature = "non-zero"))]
 #[test]
 fn test_sub_or_zero() {
     let a = pos_or_panic!(5.0);
@@ -637,6 +695,7 @@ fn test_is_multiple_edge_cases() {
     assert!(value2.is_multiple(2.0));
 }
 
+#[cfg(not(feature = "non-zero"))]
 #[test]
 fn test_is_multiple_of_with_zero() {
     let value = pos_or_panic!(10.0);

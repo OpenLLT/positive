@@ -1,6 +1,6 @@
 [package]
 name = "positive"
-version = "0.3.1"
+version = "0.4.0"
 edition = "2024"
 authors = ["Joaquín Béjar García <jb@taunais.com>"]
 description = "A type-safe wrapper for guaranteed positive decimal values"
@@ -25,3 +25,4 @@ serde_json = "1.0"
 [features]
 default = []
 utoipa = ["dep:utoipa"]
+non-zero = []
