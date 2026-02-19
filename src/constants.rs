@@ -192,3 +192,6 @@ pub const EPSILON: Decimal = dec!(1e-16);
 
 /// Represents the maximum positive value possible (effectively infinity).
 pub const INFINITY: Positive = Positive(Decimal::MAX);
+
+/// Number of days in a year.
+pub const DAYS_IN_A_YEAR: Positive = Positive(dec!(365.0));

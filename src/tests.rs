@@ -15,23 +15,27 @@
 /// let epsilon = pos_or_panic!(0.001);
 /// assert_pos_relative_eq!(a, b, epsilon); // Passes
 ///
-/// let c = pos_or_panic!(1.0);
-/// let d = pos_or_panic!(2.0);
-/// let epsilon = pos_or_panic!(0.001);
-/// #[test]
-/// #[should_panic]
-/// assert_pos_relative_eq!(c, d, epsilon); // Panics
-///
 /// let e = pos_or_panic!(0.0);
 /// let f = pos_or_panic!(0.0001);
 /// let epsilon = pos_or_panic!(0.001);
 /// assert_pos_relative_eq!(e, f, epsilon); // Passes
+/// ```
+///
+/// ```should_panic
+/// use positive::{assert_pos_relative_eq, pos_or_panic};
+///
+/// let c = pos_or_panic!(1.0);
+/// let d = pos_or_panic!(2.0);
+/// let epsilon = pos_or_panic!(0.001);
+/// assert_pos_relative_eq!(c, d, epsilon); // Panics
+/// ```
+///
+/// ```should_panic
+/// use positive::{assert_pos_relative_eq, pos_or_panic};
 ///
 /// let g = pos_or_panic!(0.0);
 /// let h = pos_or_panic!(0.0011);
 /// let epsilon = pos_or_panic!(0.001);
-/// #[test]
-/// #[should_panic]
 /// assert_pos_relative_eq!(g, h, epsilon); // Panics
 /// ```
 ///
