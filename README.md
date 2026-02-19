@@ -18,13 +18,15 @@ A type-safe wrapper for guaranteed positive decimal values in Rust.
 ### Overview
 
 `Positive` is a Rust library that provides a type-safe wrapper around `Decimal` values,
-ensuring that the contained value is always non-negative (>= 0). This is particularly
-useful in financial applications where negative values would be invalid or meaningless,
-such as prices, quantities, volatilities, and other strictly positive metrics.
+ensuring that the contained value is always positive. By default, values are non-negative
+(>= 0). With the `non-zero` feature enabled, values must be strictly positive (> 0).
+This is particularly useful in financial applications where negative values would be
+invalid or meaningless, such as prices, quantities, volatilities, and other positive metrics.
 
 ### Features
 
-- **Type Safety**: Compile-time and runtime guarantees that values are non-negative
+- **Type Safety**: Compile-time and runtime guarantees that values are positive
+- **Non-Zero Mode**: Optional `non-zero` feature flag to reject zero values (strictly > 0)
 - **Decimal Precision**: Built on [`rust_decimal`](https://crates.io/crates/rust_decimal) for accurate financial calculations
 - **Rich API**: Comprehensive arithmetic operations, conversions, and mathematical utilities
 - **Predefined Constants**: Common numeric values (0-10, multiples of 5/100/1000, PI, E, etc.)
@@ -42,6 +44,13 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 positive = "0.4"
+```
+
+To require strictly positive values (excluding zero):
+
+```toml
+[dependencies]
+positive = { version = "0.4", features = ["non-zero"] }
 ```
 
 To enable OpenAPI schema support:
